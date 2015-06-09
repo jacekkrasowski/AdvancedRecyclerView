@@ -6,10 +6,10 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
+import pl.fzymek.advancedrecyclerview.config.Config;
+
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
-
-	private static final String KEY_PREF_FAV_ANIMAL = "fav_animal";
 
 	public SettingsFragment() {
 		// Required empty public constructor
@@ -19,14 +19,14 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.settings);
-		updateSummary(KEY_PREF_FAV_ANIMAL);
+		updateSummary(Config.KEY_PREF_FAV_ANIMAL);
 	}
 
 	private void updateSummary(String key) {
 		Preference preference = findPreference(key);
 		SharedPreferences sp = preference.getSharedPreferences();
 		switch (preference.getKey()) {
-			case KEY_PREF_FAV_ANIMAL:
+			case Config.KEY_PREF_FAV_ANIMAL:
 				Preference pref = findPreference(key);
 				String[] animals = getResources().getStringArray(R.array.animals_array);
 				Integer val = Integer.parseInt(sp.getString(key, "1"));

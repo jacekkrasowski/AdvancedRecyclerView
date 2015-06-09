@@ -4,6 +4,7 @@ import pl.fzymek.advancedrecyclerview.config.API;
 import pl.fzymek.advancedrecyclerview.model.Result;
 import retrofit.http.GET;
 import retrofit.http.Headers;
+import retrofit.http.Query;
 import rx.Observable;
 
 /**
@@ -12,7 +13,7 @@ import rx.Observable;
 public interface FiveHundredPxAPI {
 
 	@Headers("Api-Key: " + API.CONSUMER_KEY)
-	@GET("/search/images?phrase=panda&fields=detail_set,display_set")
-	Observable<Result> getImages();
+	@GET("/search/images?fields=detail_set,display_set")
+	Observable<Result> getImages(@Query("phrase") String phrase);
 
 }

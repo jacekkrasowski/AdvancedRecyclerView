@@ -11,6 +11,14 @@ public class DisplaySize {
 	@SerializedName("uri")
 	String uri;
 
+	public String getName() {
+		return name;
+	}
+
+	public String getUri() {
+		return uri;
+	}
+
 	@Override
 	public String toString() {
 		return "DisplaySize{" +

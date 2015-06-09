@@ -14,6 +14,14 @@ public class Result {
 	@SerializedName("images")
 	List<Image> images;
 
+	public Integer getResultCount() {
+		return resultCount;
+	}
+
+	public List<Image> getImages() {
+		return images;
+	}
+
 	@Override
 	public String toString() {
 		return "Result{" +

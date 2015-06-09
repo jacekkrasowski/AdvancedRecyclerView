@@ -24,6 +24,34 @@ public class Image {
 	@SerializedName("display_sizes")
 	List<DisplaySize> displaySizes;
 
+	public String getId() {
+		return id;
+	}
+
+	public String getCaption() {
+		return caption;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public String getArtist() {
+		return artist;
+	}
+
+	public String getCollectionName() {
+		return collectionName;
+	}
+
+	public String getDateCreated() {
+		return dateCreated;
+	}
+
+	public List<DisplaySize> getDisplaySizes() {
+		return displaySizes;
+	}
+
 	@Override
 	public String toString() {
 		return "Image{" +
