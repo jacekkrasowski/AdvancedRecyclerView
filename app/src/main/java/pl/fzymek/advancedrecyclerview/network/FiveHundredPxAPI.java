@@ -16,7 +16,7 @@ import rx.Observable;
 public interface FiveHundredPxAPI {
 
 	@Headers("Api-Key: " + API.CONSUMER_KEY)
-	@GET("/search/images?phrase=panda")
+	@GET("/search/images?phrase=panda&fields=detail_set,display_set")
 	Observable<Result> getImages();
 
 }

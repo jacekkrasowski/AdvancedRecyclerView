@@ -1,0 +1,1 @@
+curl -i -H "Api-Key:auakjyy38bs3jq22czc7j7h8" "https://api.gettyimages.com/v3/search/images?phrase=panda&fields=detail_set,comp&page_size=2"
