@@ -1,41 +1,25 @@
 package pl.fzymek.advancedrecyclerview.activity;
 
-import android.os.AsyncTask;
-import android.support.v7.app.ActionBarActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import java.util.List;
 
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import pl.fzymek.advancedrecyclerview.R;
-import pl.fzymek.advancedrecyclerview.config.API;
 import pl.fzymek.advancedrecyclerview.controller.MainController;
 import pl.fzymek.advancedrecyclerview.model.Image;
-import pl.fzymek.advancedrecyclerview.model.Result;
-import pl.fzymek.advancedrecyclerview.network.FiveHundredPxAPI;
-import pl.fzymek.advancedrecyclerview.network.RetrofitHttpOAuthConsumer;
-import pl.fzymek.advancedrecyclerview.network.SigningOkClient;
 import pl.fzymek.advancedrecyclerview.ui.MainUI;
-import retrofit.RequestInterceptor;
-import retrofit.RestAdapter;
-import retrofit.client.OkClient;
-import rx.Observable;
-import rx.Subscriber;
 
 
 public class MainActivity extends AppCompatActivity implements MainUI {
 
 //	@InjectView(R.id.recycler)
 //	protected RecyclerView recyclerView;
-	@InjectView(R.id.toolbar)
-	protected Toolbar toolbar;
 
 	MainController controller;
 
@@ -44,44 +28,10 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		ButterKnife.inject(this);
+		setupActionBar();
+		setupPreferences();
 		setupController(savedInstanceState);
-		setupToolbar();
 		setupRecyclerView();
-
-
-		new AsyncTask<Void, Void, Void>() {
-
-			@Override
-			protected Void doInBackground(Void... params) {
-
-
-
-				RestAdapter adapter = new RestAdapter.Builder()
-					.setEndpoint(API.FIVE_HUNDRED_API_ENDPOINT)
-					.build();
-
-				FiveHundredPxAPI service = adapter.create(FiveHundredPxAPI.class);
-				Observable<Result> images = service.getImages();
-				images.subscribe(new Subscriber<Result>() {
-					@Override
-					public void onCompleted() {
-						Log.d("MainActivity", "onCompleted");
-					}
-
-					@Override
-					public void onError(Throwable e) {
-						Log.d("MainActivity", "onError", e);
-					}
-
-					@Override
-					public void onNext(Result s) {
-						Log.d("MainActivity", "onNext: \n"+ s);
-					}
-				});
-
-				return null;
-			}
-		}.execute();
 	}
 
 	@Override
@@ -106,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 
 		//noinspection SimplifiableIfStatement
 		if (id == R.id.action_settings) {
+			startActivity(new Intent(this, SettingsActivity.class));
 			return true;
 		}
 
@@ -132,6 +83,10 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 
 	}
 
+	private void setupPreferences() {
+		PreferenceManager.setDefaultValues(this, R.xml.settings, false);
+	}
+
 	private void setupController(Bundle savedState) {
 		controller = new MainController(this);
 		controller.initialize(this);
@@ -142,8 +97,9 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 
 	}
 
-	private void setupToolbar() {
-		setSupportActionBar(toolbar);
+	private void setupActionBar() {
+		getSupportActionBar().setDisplayShowHomeEnabled(true);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 	}
 
 }

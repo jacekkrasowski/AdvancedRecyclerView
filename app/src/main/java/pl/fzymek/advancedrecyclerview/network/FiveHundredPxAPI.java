@@ -1,13 +1,9 @@
 package pl.fzymek.advancedrecyclerview.network;
 
-import java.util.List;
-
 import pl.fzymek.advancedrecyclerview.config.API;
-import pl.fzymek.advancedrecyclerview.model.Image;
 import pl.fzymek.advancedrecyclerview.model.Result;
 import retrofit.http.GET;
 import retrofit.http.Headers;
-import retrofit.http.Query;
 import rx.Observable;
 
 /**
