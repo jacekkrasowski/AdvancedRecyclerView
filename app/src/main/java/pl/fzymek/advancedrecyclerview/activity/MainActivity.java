@@ -1,7 +1,9 @@
 package pl.fzymek.advancedrecyclerview.activity;
 
+import android.app.ActivityManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
@@ -14,6 +16,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,7 +27,11 @@ import com.nostra13.universalimageloader.cache.memory.impl.LruMemoryCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.nostra13.universalimageloader.core.display.SimpleBitmapDisplayer;
+import com.nostra13.universalimageloader.core.listener.ImageLoadingProgressListener;
+import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 import com.nostra13.universalimageloader.utils.StorageUtils;
 
 import java.io.IOException;
@@ -48,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 	RecyclerView.Adapter adapter;
 	RecyclerView.LayoutManager layoutManager;
 	ImageLoaderConfiguration config;
-	DisplayImageOptions options;
+	static DisplayImageOptions options;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -120,18 +127,20 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 	}
 
 	private void setupImageLoader() {
-		int memCacheSize = 2 * 1024 * 1024;
+		ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+		int memCacheSize = am.getMemoryClass() << 17; // (x *1024 *1024)/8
+		Log.d("MainActivity", "Image cache will have " + memCacheSize + " bytes (" + (memCacheSize >> 20) + " MB)");
 		config = new ImageLoaderConfiguration.Builder(this)
 			.memoryCache(new LruMemoryCache(memCacheSize))
-			.memoryCacheSize(memCacheSize)
 			.build();
 		ImageLoader.getInstance().init(config);
 		options = new DisplayImageOptions.Builder()
 			.cacheInMemory(true)
-			.cacheOnDisk(false)
 			.considerExifParams(true)
-			.bitmapConfig(Bitmap.Config.RGB_565)
-			.displayer(new FadeInBitmapDisplayer(100))
+			.bitmapConfig(Bitmap.Config.ARGB_8888)
+			.imageScaleType(ImageScaleType.EXACTLY_STRETCHED)
+			.resetViewBeforeLoading(true)
+			.showImageOnLoading(new ColorDrawable(getResources().getColor(android.R.color.darker_gray)))
 			.build();
 	}
 
@@ -150,6 +159,16 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 		recyclerView.setLayoutManager(layoutManager);
 		adapter = new ImagesAdapter();
 		recyclerView.setAdapter(adapter);
+//		recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+//			@Override
+//			public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+//				if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+//					ImageLoader.getInstance().resume();
+//				} else {
+//					ImageLoader.getInstance().pause();
+//				}
+//			}
+//		});
 	}
 
 	private void setupActionBar() {
@@ -173,11 +192,11 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 		}
 
 		@Override
-		public void onBindViewHolder(ImageCard holder, int position) {
+		public void onBindViewHolder(final ImageCard holder, int position) {
 			holder.artist.setText(getItem(position).getArtist());
 			holder.title.setText(getItem(position).getTitle());
-			//load image
-			ImageLoader.getInstance().displayImage(getItem(position).getDisplaySizes().get(0).getUri(), holder.image);
+			ImageLoader.getInstance().cancelDisplayTask(holder.image);
+			ImageLoader.getInstance().displayImage(getItem(position).getDisplayByType(Image.DisplaySizeType.PREVIEW).getUri(), holder.image, MainActivity.options);
 		}
 
 		private Image getItem(int position) {
@@ -201,12 +220,14 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 		ImageView image;
 		TextView artist;
 		TextView title;
+		ProgressBar progress;
 
 		public ImageCard(View itemView) {
 			super(itemView);
 			image = (ImageView) itemView.findViewById(R.id.image);
 			artist = (TextView) itemView.findViewById(R.id.artist);
 			title = (TextView) itemView.findViewById(R.id.title);
+			progress = (ProgressBar) itemView.findViewById(R.id.progress);
 		}
 	}
 }

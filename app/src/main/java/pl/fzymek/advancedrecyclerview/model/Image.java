@@ -52,6 +52,15 @@ public class Image {
 		return displaySizes;
 	}
 
+	public DisplaySize getDisplayByType(DisplaySizeType type) {
+		for (DisplaySize size : displaySizes) {
+			if (size.getName().equals(type.name)) {
+				return size;
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public String toString() {
 		return "Image{" +
@@ -63,5 +72,18 @@ public class Image {
 			", dateCreated='" + dateCreated + '\'' +
 			", displaySizes=" + displaySizes +
 			'}';
+	}
+
+	public enum DisplaySizeType {
+		THUMB("thumb"),
+		PREVIEW("preview"),
+		LARGE("comp");
+
+		protected final String name;
+
+		DisplaySizeType(String type) {
+			this.name= type;
+		}
+
 	}
 }
