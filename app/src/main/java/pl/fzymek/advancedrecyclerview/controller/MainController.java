@@ -77,6 +77,7 @@ public class MainController extends ActivityController<MainUI> implements Observ
 		subscribeWith(images
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribeOn(Schedulers.io())
+				.filter(result -> true)
 				.subscribe(this)
 		);
 	}

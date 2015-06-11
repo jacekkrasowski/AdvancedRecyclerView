@@ -1,4 +1,4 @@
-package pl.fzymek.advancedrecyclerview;
+package pl.fzymek.advancedrecyclerview.fragment;
 
 
 import android.content.SharedPreferences;
@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
+import pl.fzymek.advancedrecyclerview.R;
 import pl.fzymek.advancedrecyclerview.config.Config;
 
 
