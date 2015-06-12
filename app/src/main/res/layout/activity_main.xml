@@ -3,13 +3,11 @@
 			  android:layout_width="match_parent"
 			  android:layout_height="match_parent"
 			  android:orientation="vertical"
-			  android:paddingLeft="@dimen/padding_left_right"
-			  android:paddingStart="@dimen/padding_left_right"
-			  android:paddingRight="@dimen/padding_left_right"
-			  android:paddingEnd="@dimen/padding_left_right"
 			  tools:context="pl.fzymek.advancedrecyclerview.activity.MainActivity">
 
 	<android.support.v7.widget.RecyclerView
+		android:paddingLeft="@dimen/padding_left_right"
+		android:paddingRight="@dimen/padding_left_right"
 		android:id="@+id/recycler"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"

@@ -11,6 +11,7 @@ import pl.fzymek.advancedrecyclerview.config.Config;
 import pl.fzymek.advancedrecyclerview.model.Result;
 import pl.fzymek.advancedrecyclerview.network.FiveHundredPxAPI;
 import pl.fzymek.advancedrecyclerview.ui.MainUI;
+import pl.fzymek.advancedrecyclerview.utils.SimpleCache;
 import retrofit.RestAdapter;
 import rx.Observable;
 import rx.Observer;
@@ -69,15 +70,14 @@ public class MainController extends ActivityController<MainUI> implements Observ
 	}
 
 	public void loadData() {
-		Log.d("MainController", "loadData");
 		ui.onLoadingStarted();
 		String searchPhrase = getSearchPhrase();
-		Log.d("MainController", "search phrase: "+ searchPhrase);
-		Observable<Result> images = fiveHundredApi.getImages(searchPhrase);
-		subscribeWith(images
-				.observeOn(AndroidSchedulers.mainThread())
+		Observable<Result> imagesObservable = buildImagesObservable(searchPhrase);
+		subscribeWith(imagesObservable
 				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread())
 				.filter(result -> true)
+				.cache()
 				.subscribe(this)
 		);
 	}
@@ -105,5 +105,23 @@ public class MainController extends ActivityController<MainUI> implements Observ
 		int key = Integer.parseInt(sharedPreferences.getString(Config.KEY_PREF_FAV_ANIMAL, Config.PREF_FAV_ANIMAL_DEFAULT));
 		String animal = getActivity().getResources().getStringArray(R.array.animals_array)[key - 1];
 		return animal;
+	}
+
+	private Observable<Result> buildImagesObservable(String searchPhrase) {
+		Observable<Result> imagesObservable = null;
+		if (hasCache()) {
+			Log.d("MainController", "hasCache, fetching cached object");
+			imagesObservable = (Observable<Result>) getCache().get();
+		}
+
+		if (imagesObservable == null) {
+			Log.d("MainController", "Cached object is null");
+			imagesObservable = fiveHundredApi.getImages(searchPhrase);
+			if (hasCache()) {
+				Log.d("MainController", "putting object into cache");
+				getCache().put(imagesObservable);
+			}
+		}
+		return imagesObservable;
 	}
 }

@@ -1,20 +1,31 @@
 package pl.fzymek.advancedrecyclerview.activity;
 
+import android.animation.TimeInterpolator;
 import android.app.ActivityManager;
+import android.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewPropertyAnimator;
+import android.view.WindowManager;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -42,11 +53,16 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import pl.fzymek.advancedrecyclerview.R;
 import pl.fzymek.advancedrecyclerview.controller.MainController;
+import pl.fzymek.advancedrecyclerview.fragment.CacheFragment;
 import pl.fzymek.advancedrecyclerview.model.Image;
 import pl.fzymek.advancedrecyclerview.ui.MainUI;
+import rx.Observable;
 
 
 public class MainActivity extends AppCompatActivity implements MainUI {
+
+	private final static String CACHE = "cache";
+	CacheFragment<Observable> cacheFragment;
 
 	@InjectView(R.id.recycler)
 	protected RecyclerView recyclerView;
@@ -64,9 +80,18 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 		ButterKnife.inject(this);
 		setupActionBar();
 		setupPreferences();
+		setupCache();
 		setupController(savedInstanceState);
 		setupRecyclerView();
 		setupImageLoader();
+	}
+
+	private void setupCache() {
+		cacheFragment = (CacheFragment<Observable>) getFragmentManager().findFragmentByTag(CACHE);
+		if (cacheFragment == null) {
+			cacheFragment = new CacheFragment<>();
+			getFragmentManager().beginTransaction().add(cacheFragment, CACHE).commit();
+		}
 	}
 
 	@Override
@@ -122,7 +147,6 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 
 	@Override
 	public void onDisplayImages(List<Image> images) {
-		Log.d("MainActivity", "onDisplayImages");
 		((ImagesAdapter) adapter).setImages(images);
 	}
 
@@ -152,23 +176,19 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 		controller = new MainController(this);
 		controller.initialize(this);
 		controller.restoreState(savedState);
+		controller.setCache(cacheFragment);
 	}
 
 	private void setupRecyclerView() {
 		layoutManager = new LinearLayoutManager(this);
 		recyclerView.setLayoutManager(layoutManager);
-		adapter = new ImagesAdapter();
+		adapter = new ImagesAdapter(this);
 		recyclerView.setAdapter(adapter);
-//		recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-//			@Override
-//			public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-//				if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-//					ImageLoader.getInstance().resume();
-//				} else {
-//					ImageLoader.getInstance().pause();
-//				}
-//			}
-//		});
+		recyclerView.setItemAnimator(getItemAnimator());
+	}
+
+	private RecyclerView.ItemAnimator getItemAnimator() {
+		return null;
 	}
 
 	private void setupActionBar() {
@@ -180,9 +200,19 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 	private static class ImagesAdapter extends RecyclerView.Adapter<ImageCard> {
 
 		List<Image> images;
+		Context context;
+		int lastPosition = 0;
+		Point windowSize = new Point();
+		SparseBooleanArray animatedPositions = new SparseBooleanArray();
+		TimeInterpolator interpolator;
 
-		public ImagesAdapter() {
+		public ImagesAdapter(Context context) {
+			this.context = context;
 			images = new ArrayList<>();
+			WindowManager wm = (WindowManager) context.getSystemService(WINDOW_SERVICE);
+			Point windowSize = new Point();
+			wm.getDefaultDisplay().getSize(windowSize);
+			interpolator = new DecelerateInterpolator(2);
 		}
 
 		@Override
@@ -197,6 +227,29 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 			holder.title.setText(getItem(position).getTitle());
 			ImageLoader.getInstance().cancelDisplayTask(holder.image);
 			ImageLoader.getInstance().displayImage(getItem(position).getDisplayByType(Image.DisplaySizeType.PREVIEW).getUri(), holder.image, MainActivity.options);
+
+			if (position > lastPosition && !animatedPositions.get(position)) {
+				lastPosition = position;
+				animatedPositions.put(position, true);
+
+				holder.itemView.setTranslationX(0);
+				holder.itemView.setTranslationY(windowSize.y);
+				holder.itemView.setRotationX(45.0f);
+				holder.itemView.setScaleX(0.6f);
+				holder.itemView.setScaleY(0.6f);
+				holder.itemView.setAlpha(0);
+
+				ViewPropertyAnimator animator = holder.itemView.animate()
+					.translationX(0)
+					.translationY(0)
+					.rotationX(0)
+					.scaleX(1)
+					.scaleY(1)
+					.alpha(1)
+					.setDuration(300)
+					.setInterpolator(interpolator);
+				animator.setStartDelay(0).start();
+			}
 		}
 
 		private Image getItem(int position) {
@@ -217,6 +270,7 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 
 	private static class ImageCard extends RecyclerView.ViewHolder {
 
+		CardView cardView;
 		ImageView image;
 		TextView artist;
 		TextView title;
@@ -224,6 +278,7 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 
 		public ImageCard(View itemView) {
 			super(itemView);
+			cardView = (CardView) itemView.findViewById(R.id.card);
 			image = (ImageView) itemView.findViewById(R.id.image);
 			artist = (TextView) itemView.findViewById(R.id.artist);
 			title = (TextView) itemView.findViewById(R.id.title);

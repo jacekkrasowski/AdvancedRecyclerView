@@ -1,5 +1,6 @@
 package pl.fzymek.advancedrecyclerview.controller;
 
+import pl.fzymek.advancedrecyclerview.utils.SimpleCache;
 import rx.Subscription;
 import rx.subscriptions.CompositeSubscription;
 
@@ -15,6 +16,8 @@ public abstract class CompositeSubscriptionController<UI> implements Controller<
 	 * Holder for subscriptions
 	 */
 	CompositeSubscription compositeSubscription;
+
+	SimpleCache cache;
 
 	protected CompositeSubscriptionController() {
 		compositeSubscription = new CompositeSubscription();
@@ -41,5 +44,20 @@ public abstract class CompositeSubscriptionController<UI> implements Controller<
 	@Override
 	public void onDestroy() {
 		unsubscribeWithAll();
+	}
+
+	@Override
+	public <T> void setCache(SimpleCache<T> cache) {
+		this.cache = cache;
+	}
+
+	@Override
+	public <T> SimpleCache<T> getCache() {
+		return cache;
+	}
+
+	@Override
+	public boolean hasCache() {
+		return cache != null;
 	}
 }
