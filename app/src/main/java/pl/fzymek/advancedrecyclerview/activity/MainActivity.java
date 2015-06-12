@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 	protected RecyclerView recyclerView;
 
 	MainController controller;
-	RecyclerView.Adapter adapter;
+	ImagesAdapter adapter;
 	RecyclerView.LayoutManager layoutManager;
 	ImageLoaderConfiguration config;
 	static DisplayImageOptions options;
@@ -138,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 	@Override
 	public void onLoadingStarted() {
 		Log.d("MainActivity", "onLoadingStarted");
+		adapter.clear();
 	}
 
 	@Override
@@ -264,6 +265,13 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 		public void setImages(List<Image> images) {
 			this.images.clear();
 			this.images.addAll(images);
+			notifyDataSetChanged();
+		}
+
+		public void clear() {
+			this.images.clear();
+			lastPosition = 0;
+			animatedPositions.clear();
 			notifyDataSetChanged();
 		}
 	}

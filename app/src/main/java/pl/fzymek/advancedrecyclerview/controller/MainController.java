@@ -111,7 +111,7 @@ public class MainController extends ActivityController<MainUI> implements Observ
 		Observable<Result> imagesObservable = null;
 		if (hasCache()) {
 			Log.d("MainController", "hasCache, fetching cached object");
-			imagesObservable = (Observable<Result>) getCache().get();
+			imagesObservable = (Observable<Result>) getCache().get(searchPhrase);
 		}
 
 		if (imagesObservable == null) {
@@ -119,7 +119,7 @@ public class MainController extends ActivityController<MainUI> implements Observ
 			imagesObservable = fiveHundredApi.getImages(searchPhrase);
 			if (hasCache()) {
 				Log.d("MainController", "putting object into cache");
-				getCache().put(imagesObservable);
+				getCache().put(searchPhrase, imagesObservable);
 			}
 		}
 		return imagesObservable;

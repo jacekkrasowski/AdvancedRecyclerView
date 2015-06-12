@@ -2,6 +2,7 @@ package pl.fzymek.advancedrecyclerview.fragment;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.util.LruCache;
 
 import pl.fzymek.advancedrecyclerview.utils.SimpleCache;
 
@@ -10,21 +11,22 @@ import pl.fzymek.advancedrecyclerview.utils.SimpleCache;
  */
 public class CacheFragment<T> extends Fragment implements SimpleCache<T> {
 
-	T cache;
+	LruCache<Object, T> cache;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setRetainInstance(true);
+		cache = new LruCache<>(3);
 	}
 
 	@Override
-	public void put(T o) {
-		cache = o;
+	public void put(Object key, T o) {
+		cache.put(key, o);
 	}
 
 	@Override
-	public T get() {
-		return cache;
+	public T get(Object key) {
+		return cache.get(key);
 	}
 }
