@@ -111,6 +111,7 @@ public class MainController extends ActivityController<MainUI> implements Observ
 		Observable<Result> imagesObservable = null;
 		if (hasCache()) {
 			Log.d("MainController", "hasCache, fetching cached object");
+			//noinspection unchecked
 			imagesObservable = (Observable<Result>) getCache().get(searchPhrase);
 		}
 
@@ -123,5 +124,14 @@ public class MainController extends ActivityController<MainUI> implements Observ
 			}
 		}
 		return imagesObservable;
+	}
+
+	public void refreshData() {
+		removeCurrentCacheEntry();
+		loadData();
+	}
+
+	private void removeCurrentCacheEntry() {
+		getCache().clear();
 	}
 }

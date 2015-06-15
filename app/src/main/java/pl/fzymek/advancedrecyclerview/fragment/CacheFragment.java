@@ -29,4 +29,9 @@ public class CacheFragment<T> extends Fragment implements SimpleCache<T> {
 	public T get(Object key) {
 		return cache.get(key);
 	}
+
+	@Override
+	public void clear() {
+		cache.evictAll();
+	}
 }

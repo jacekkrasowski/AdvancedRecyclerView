@@ -10,6 +10,9 @@ import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.view.MenuCompat;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
@@ -19,6 +22,7 @@ import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,22 +50,26 @@ import pl.fzymek.advancedrecyclerview.controller.MainController;
 import pl.fzymek.advancedrecyclerview.fragment.CacheFragment;
 import pl.fzymek.advancedrecyclerview.model.Image;
 import pl.fzymek.advancedrecyclerview.ui.MainUI;
+import pl.fzymek.advancedrecyclerview.utils.LoadingObserver;
 import rx.Observable;
 
 
-public class MainActivity extends AppCompatActivity implements MainUI {
+public class MainActivity extends AppCompatActivity implements MainUI, SwipeRefreshLayout.OnRefreshListener {
 
 	private final static String CACHE = "cache";
 	CacheFragment<Observable> cacheFragment;
 
 	@InjectView(R.id.recycler)
 	protected RecyclerView recyclerView;
+	@InjectView(R.id.swipe_refresh)
+	protected SwipeRefreshLayout swipeRefreshLayout;
 
 	MainController controller;
 	ImagesAdapter adapter;
 	RecyclerView.LayoutManager layoutManager;
 	ImageLoaderConfiguration config;
 	static DisplayImageOptions options;
+	LoadingObserver loadingObserver;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -72,8 +80,19 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 		setupPreferences();
 		setupCache();
 		setupController(savedInstanceState);
+		setupRefresh();
 		setupRecyclerView();
 		setupImageLoader();
+	}
+
+	private void setupRefresh() {
+		swipeRefreshLayout.setOnRefreshListener(this);
+		swipeRefreshLayout.setColorScheme(
+			android.R.color.holo_blue_bright,
+			android.R.color.holo_green_light,
+			android.R.color.holo_orange_light,
+			android.R.color.holo_red_light
+		);
 	}
 
 	private void setupCache() {
@@ -98,9 +117,20 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+		System.out.println("onCreateOptionsMenu");
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.menu_main, menu);
-		return true;
+
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		System.out.println("onPrepareOptionsMenu");
+		MenuItem refreshItem = menu.findItem(R.id.action_refresh);
+		refreshItem.setVisible(false);
+		loadingObserver = new LoadingObserver(refreshItem);
+		return super.onPrepareOptionsMenu(menu);
 	}
 
 	@Override
@@ -129,16 +159,24 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 	public void onLoadingStarted() {
 		Log.d("MainActivity", "onLoadingStarted");
 		adapter.clear();
+		if (loadingObserver != null) {
+			loadingObserver.loadingStarted();
+		}
+		swipeRefreshLayout.setRefreshing(true);
 	}
 
 	@Override
 	public void onLoadingStopped() {
 		Log.d("MainActivity", "onLoadingStopped");
+		if (loadingObserver != null) {
+			loadingObserver.loadingStopped();
+		}
+		swipeRefreshLayout.setRefreshing(false);
 	}
 
 	@Override
 	public void onDisplayImages(List<Image> images) {
-		((ImagesAdapter) adapter).setImages(images);
+		adapter.setImages(images);
 	}
 
 	private void setupImageLoader() {
@@ -197,6 +235,11 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 		return orientation == Configuration.ORIENTATION_LANDSCAPE;
 	}
 
+	@Override
+	public void onRefresh() {
+		controller.refreshData();
+	}
+
 
 	private static class ImagesAdapter extends RecyclerView.Adapter<ImageCard> {
 
@@ -244,7 +287,7 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 			} else {
 				setupVerticalItemProperties(holder);
 			}
-			
+
 			holder.itemView.animate().translationX(0)
 				.translationY(0)
 				.rotationX(0)

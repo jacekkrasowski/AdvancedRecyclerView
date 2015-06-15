@@ -6,4 +6,6 @@ package pl.fzymek.advancedrecyclerview.utils;
 public interface SimpleCache<T> {
 	void put(Object key, T cachedObject);
 	T get(Object key);
+
+	void clear();
 }
