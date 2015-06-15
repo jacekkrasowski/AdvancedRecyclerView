@@ -2,9 +2,9 @@ package pl.fzymek.advancedrecyclerview.activity;
 
 import android.animation.TimeInterpolator;
 import android.app.ActivityManager;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
@@ -12,7 +12,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
-import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -20,7 +20,6 @@ import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewPropertyAnimator;
@@ -31,21 +30,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiskCache;
-import com.nostra13.universalimageloader.cache.disc.impl.ext.LruDiskCache;
-import com.nostra13.universalimageloader.cache.disc.naming.FileNameGenerator;
 import com.nostra13.universalimageloader.cache.memory.impl.LruMemoryCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
-import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
-import com.nostra13.universalimageloader.core.display.SimpleBitmapDisplayer;
-import com.nostra13.universalimageloader.core.listener.ImageLoadingProgressListener;
-import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
-import com.nostra13.universalimageloader.utils.StorageUtils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -181,7 +171,12 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 	}
 
 	private void setupRecyclerView() {
-		layoutManager = new LinearLayoutManager(this);
+		if (isLandscape(this)) {
+			layoutManager = new GridLayoutManager(this, 2);
+		} else {
+			layoutManager = new LinearLayoutManager(this);
+		}
+
 		recyclerView.setLayoutManager(layoutManager);
 		adapter = new ImagesAdapter(this);
 		recyclerView.setAdapter(adapter);
@@ -195,6 +190,11 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 	private void setupActionBar() {
 		getSupportActionBar().setDisplayShowHomeEnabled(true);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+	}
+
+	private static boolean isLandscape(Context c) {
+		int orientation = c.getResources().getConfiguration().orientation;
+		return orientation == Configuration.ORIENTATION_LANDSCAPE;
 	}
 
 
@@ -232,25 +232,30 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 			if (position > lastPosition && !animatedPositions.get(position)) {
 				lastPosition = position;
 				animatedPositions.put(position, true);
-
-				holder.itemView.setTranslationX(0);
-				holder.itemView.setTranslationY(windowSize.y);
-				holder.itemView.setRotationX(45.0f);
-				holder.itemView.setScaleX(0.6f);
-				holder.itemView.setScaleY(0.6f);
-				holder.itemView.setAlpha(0);
-
-				ViewPropertyAnimator animator = holder.itemView.animate()
-					.translationX(0)
-					.translationY(0)
-					.rotationX(0)
-					.scaleX(1)
-					.scaleY(1)
-					.alpha(1)
-					.setDuration(300)
-					.setInterpolator(interpolator);
-				animator.setStartDelay(0).start();
+				startItemAnimation(holder, position);
 			}
+		}
+
+		private void startItemAnimation(ImageCard holder, int position) {
+			setupCommonItemProperties(holder);
+
+			if (isLandscape(context)) {
+				setupHorizontalItemProperties(holder, position);
+			} else {
+				setupVerticalItemProperties(holder);
+			}
+			
+			holder.itemView.animate().translationX(0)
+				.translationY(0)
+				.rotationX(0)
+				.rotationY(0)
+				.scaleX(1)
+				.scaleY(1)
+				.alpha(1)
+				.setDuration(300)
+				.setInterpolator(interpolator)
+				.setStartDelay(0)
+				.start();
 		}
 
 		private Image getItem(int position) {
@@ -274,6 +279,27 @@ public class MainActivity extends AppCompatActivity implements MainUI {
 			animatedPositions.clear();
 			notifyDataSetChanged();
 		}
+
+		private void setupCommonItemProperties(ImageCard holder) {
+			holder.itemView.setTranslationX(0);
+			holder.itemView.setTranslationY(windowSize.y);
+			holder.itemView.setScaleX(0.6f);
+			holder.itemView.setScaleY(0.6f);
+			holder.itemView.setAlpha(0);
+		}
+
+		private void setupHorizontalItemProperties(ImageCard holder, int position) {
+			if (position % 2 == 0) {
+				holder.itemView.setRotationY(45.0f);
+			} else {
+				holder.itemView.setRotationY(-45.0f);
+			}
+		}
+
+		private void setupVerticalItemProperties(ImageCard holder) {
+			holder.itemView.setRotationX(45.0f);
+		}
+
 	}
 
 	private static class ImageCard extends RecyclerView.ViewHolder {
