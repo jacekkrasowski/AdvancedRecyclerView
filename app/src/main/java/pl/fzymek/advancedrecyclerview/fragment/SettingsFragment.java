@@ -1,10 +1,14 @@
 package pl.fzymek.advancedrecyclerview.fragment;
 
 
+import android.app.Fragment;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.support.v4.app.NavUtils;
+import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 
 import pl.fzymek.advancedrecyclerview.R;
 import pl.fzymek.advancedrecyclerview.config.Config;
@@ -16,12 +20,34 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 		// Required empty public constructor
 	}
 
+	public static Fragment newInstance() {
+		SettingsFragment fragment = new SettingsFragment();
+		return fragment;
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.settings);
 		updateSummary(Config.KEY_PREF_FAV_ANIMAL);
 	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			// Respond to the action bar's Up/Home button
+			case android.R.id.home:
+				getActivity().onBackPressed();
+				return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	private void setupActionBar() {
+		((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayShowHomeEnabled(false);
+		((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+	}
+
 
 	private void updateSummary(String key) {
 		Preference preference = findPreference(key);
@@ -37,10 +63,10 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 
 	}
 
-
 	@Override
 	public void onResume() {
 		super.onResume();
+		setupActionBar();
 		getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
 	}
 
