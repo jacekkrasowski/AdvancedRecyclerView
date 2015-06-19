@@ -9,5 +9,6 @@
 	<string name="error_happened">Something went wrong!</string>
 	<string name="title">"Title: "</string>
 	<string name="artist">"Artist: "</string>
+	<string name="action_staggered_grid">Use fancy grid</string>
 
 </resources>

@@ -6,4 +6,5 @@ package pl.fzymek.advancedrecyclerview.config;
 public interface Config {
 	String KEY_PREF_FAV_ANIMAL = "fav_animal";
 	String PREF_FAV_ANIMAL_DEFAULT = "1";
+	String KEY_PREF_USE_STAGGERED_GRID = "use_staggered_grid";
 }

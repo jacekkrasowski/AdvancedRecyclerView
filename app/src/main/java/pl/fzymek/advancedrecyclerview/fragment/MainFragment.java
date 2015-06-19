@@ -4,6 +4,7 @@ import android.animation.TimeInterpolator;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Bundle;
@@ -14,7 +15,6 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -39,11 +39,16 @@ import java.util.List;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import pl.fzymek.advancedrecyclerview.R;
-import pl.fzymek.advancedrecyclerview.activity.MainActivity;
+import pl.fzymek.advancedrecyclerview.activity.BaseActivity;
+import pl.fzymek.advancedrecyclerview.config.Config;
 import pl.fzymek.advancedrecyclerview.controller.MainController;
 import pl.fzymek.advancedrecyclerview.model.Image;
 import pl.fzymek.advancedrecyclerview.ui.MainUI;
 import rx.Observable;
+import rx.Observer;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by Filip Zymek on 2015-06-18.
@@ -93,7 +98,6 @@ public class MainFragment extends Fragment implements MainUI, SwipeRefreshLayout
 	public void onResume() {
 		super.onResume();
 		setupActionBar();
-		Log.d("MainFragment", "start loading data");
 		controller.loadData();
 	}
 
@@ -110,6 +114,20 @@ public class MainFragment extends Fragment implements MainUI, SwipeRefreshLayout
 	}
 
 	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		super.onPrepareOptionsMenu(menu);
+		getStaggeredGridEnabled()
+			.subscribeOn(Schedulers.io())
+			.observeOn(AndroidSchedulers.mainThread())
+			.subscribe(isEnabled -> {
+				MenuItem item = menu.findItem(R.id.action_staggered_grid);
+				if (item != null) {
+					item.setChecked(isEnabled);
+				}
+			});
+	}
+
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
@@ -119,19 +137,63 @@ public class MainFragment extends Fragment implements MainUI, SwipeRefreshLayout
 		//noinspection SimplifiableIfStatement
 		switch (id) {
 			case R.id.action_settings:
-				getFragmentManager().beginTransaction()
-					.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-					.replace(R.id.content_frame, SettingsFragment.newInstance(), "settings")
-					.addToBackStack(null)
-					.commit();
+				handleSettingsAction();
+				return true;
+			case R.id.action_staggered_grid:
+				handleStaggeredGridCheckAction(item);
 				return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
 
+	private void handleStaggeredGridCheckAction(final MenuItem item) {
+
+		Action1<? super Void> action = (Void v) -> {
+			setupRecyclerView();
+			controller.loadData();
+		};
+
+		getStaggeredGridEnabled()
+			.subscribeOn(Schedulers.io())
+			.observeOn(AndroidSchedulers.mainThread())
+			.subscribe(isEnabled -> {
+				if (isEnabled) {
+					item.setChecked(false);
+					setStaggeredGridEnabled(false)
+						.subscribeOn(Schedulers.io())
+						.observeOn(AndroidSchedulers.mainThread())
+						.subscribe(action);
+				} else {
+					item.setChecked(true);
+					setStaggeredGridEnabled(true)
+						.subscribeOn(Schedulers.io())
+						.observeOn(AndroidSchedulers.mainThread())
+						.subscribe(action);
+				}
+			});
+
+	}
+
+
+	private Observable<Void> setStaggeredGridEnabled(boolean isEnabled) {
+		return Observable.create(subscriber -> {
+			SharedPreferences prefs = getActivity().getPreferences(Context.MODE_PRIVATE);
+			prefs.edit().putBoolean(Config.KEY_PREF_USE_STAGGERED_GRID, isEnabled).apply();
+			subscriber.onCompleted();
+		});
+	}
+
+	private void handleSettingsAction() {
+		getFragmentManager().beginTransaction()
+			.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+			.replace(R.id.content_frame, SettingsFragment.newInstance(), "settings")
+			.addToBackStack(null)
+			.commit();
+	}
+
 	@Override
 	public void onError(Throwable error) {
-		Toast.makeText(getActivity(), getString(R.string.error_happened), Toast.LENGTH_SHORT).show();
+		Toast.makeText(getActivity(), getActivity().getApplicationContext().getString(R.string.error_happened), Toast.LENGTH_SHORT).show();
 		Log.e("MainFragment", "Error: ", error);
 	}
 
@@ -181,13 +243,23 @@ public class MainFragment extends Fragment implements MainUI, SwipeRefreshLayout
 
 	private void setupRecyclerView() {
 		if (isLandscape(getActivity())) {
+			SharedPreferences prefs = getActivity().getPreferences(Context.MODE_PRIVATE);
+			boolean isStaggered = prefs.getBoolean(Config.KEY_PREF_USE_STAGGERED_GRID, false);
 			layoutManager = new GridLayoutManager(getActivity(), 2);
+			if (isStaggered) {
+				((GridLayoutManager) layoutManager).setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+					@Override
+					public int getSpanSize(int position) {
+						return position % 3 == 0 ? 2 : 1;
+					}
+				});
+			}
 		} else {
 			layoutManager = new LinearLayoutManager(getActivity());
 		}
 
 		recyclerView.setLayoutManager(layoutManager);
-		adapter = new ImagesAdapter(getActivity(), ((MainActivity)getActivity()).getDisplayImageOptions());
+		adapter = new ImagesAdapter(getActivity(), ((BaseActivity) getActivity()).getDisplayImageOptions());
 		recyclerView.setAdapter(adapter);
 		recyclerView.setItemAnimator(getItemAnimator());
 	}
@@ -209,6 +281,14 @@ public class MainFragment extends Fragment implements MainUI, SwipeRefreshLayout
 	@Override
 	public void onRefresh() {
 		controller.refreshData();
+	}
+
+	public Observable<Boolean> getStaggeredGridEnabled() {
+		return Observable.create(subscriber -> {
+			SharedPreferences prefs = getActivity().getPreferences(Context.MODE_PRIVATE);
+			subscriber.onNext(prefs.getBoolean(Config.KEY_PREF_USE_STAGGERED_GRID, false));
+			subscriber.onCompleted();
+		});
 	}
 
 
@@ -318,21 +398,22 @@ public class MainFragment extends Fragment implements MainUI, SwipeRefreshLayout
 
 	}
 
-	private static class ImageCard extends RecyclerView.ViewHolder {
+	protected static class ImageCard extends RecyclerView.ViewHolder {
 
+		@InjectView(R.id.card)
 		CardView cardView;
+		@InjectView(R.id.image)
 		ImageView image;
+		@InjectView(R.id.artist)
 		TextView artist;
+		@InjectView(R.id.title)
 		TextView title;
+		@InjectView(R.id.progress)
 		ProgressBar progress;
 
 		public ImageCard(View itemView) {
 			super(itemView);
-			cardView = (CardView) itemView.findViewById(R.id.card);
-			image = (ImageView) itemView.findViewById(R.id.image);
-			artist = (TextView) itemView.findViewById(R.id.artist);
-			title = (TextView) itemView.findViewById(R.id.title);
-			progress = (ProgressBar) itemView.findViewById(R.id.progress);
+			ButterKnife.inject(this, itemView);
 		}
 	}
 }
