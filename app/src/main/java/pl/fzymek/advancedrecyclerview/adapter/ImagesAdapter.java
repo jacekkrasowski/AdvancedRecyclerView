@@ -2,6 +2,7 @@ package pl.fzymek.advancedrecyclerview.adapter;
 
 import android.animation.TimeInterpolator;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -17,6 +18,8 @@ import android.widget.TextView;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.FailReason;
+import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +30,7 @@ import pl.fzymek.advancedrecyclerview.R;
 import pl.fzymek.advancedrecyclerview.fragment.MainFragment;
 import pl.fzymek.advancedrecyclerview.model.Image;
 import pl.fzymek.advancedrecyclerview.utils.Utils;
+import pl.fzymek.advancedrecyclerview.widget.BlurringTextView;
 
 import static pl.fzymek.advancedrecyclerview.utils.Utils.isLandscape;
 
@@ -55,7 +59,7 @@ public class ImagesAdapter extends RecyclerView.Adapter<ImagesAdapter.ImageCard>
 
 	@Override
 	public ImageCard onCreateViewHolder(ViewGroup parent, int viewType) {
-		View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.image_card, parent, false);
+		View v = LayoutInflater.from(this.context).inflate(R.layout.image_card, parent, false);
 		return new ImageCard(v);
 	}
 
