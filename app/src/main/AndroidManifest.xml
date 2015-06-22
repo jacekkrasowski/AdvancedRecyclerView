@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="pl.fzymek.advancedrecyclerview"
-		  xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+	package="pl.fzymek.advancedrecyclerview"
+	xmlns:android="http://schemas.android.com/apk/res/android">
 
 	<uses-permission android:name="android.permission.INTERNET"/>
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 	<uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
+	<uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
+	<uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
 
 	<application
 		android:name=".application.AdvancedRecyclerViewApplication"
@@ -25,9 +28,31 @@
 		<provider
 			android:name=".provider.Provider"
 			android:authorities="pl.fzymek.advancedrecyclerview.provider"
-			android:exported="false">
+			android:exported="false"
+			android:syncable="true">
 
 		</provider>
+
+		<service android:name=".authenticator.AuthenticatorService">
+			<intent-filter>
+				<action android:name="android.accounts.AccountAuthenticator"/>
+			</intent-filter>
+			<meta-data
+				android:name="android.accounts.AccountAuthenticator"
+				android:resource="@xml/authenticator"/>
+		</service>
+
+		<service
+			android:name=".sync.SyncService"
+			android:exported="true"
+			android:process=":sync">
+			<intent-filter>
+				<action android:name="android.content.SyncAdapter"/>
+			</intent-filter>
+			<meta-data
+				android:name="android.content.SyncAdapter"
+				android:resource="@xml/sync_adapter"/>
+		</service>
 	</application>
 
 </manifest>
