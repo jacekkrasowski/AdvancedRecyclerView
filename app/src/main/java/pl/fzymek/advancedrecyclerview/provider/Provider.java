@@ -17,8 +17,8 @@ import pl.fzymek.advancedrecyclerview.provider.processor.ImagesProcessor;
  */
 public class Provider extends ContentProvider {
 
-	public static final int DISPLAY_SIZES = 1;
-	public static final int IMAGES = 2;
+	public static final int IMAGES = 1;
+	public static final int DISPLAY_SIZES = 2;
 
 	private final Object lock = new Object();
 
@@ -29,16 +29,18 @@ public class Provider extends ContentProvider {
 
 	static {
 		URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
-		URI_MATCHER.addURI(Contract.AUTHORITY, Contract.DisplaySizes.TABLE_NAME, DISPLAY_SIZES);
 		URI_MATCHER.addURI(Contract.AUTHORITY, Contract.Images.TABLE_NAME, IMAGES);
+		URI_MATCHER.addURI(Contract.AUTHORITY, Contract.Images.TABLE_NAME + "/*", IMAGES);
+		URI_MATCHER.addURI(Contract.AUTHORITY, Contract.DisplaySizes.TABLE_NAME, DISPLAY_SIZES);
+		URI_MATCHER.addURI(Contract.AUTHORITY, Contract.DisplaySizes.TABLE_NAME + "/*", DISPLAY_SIZES);
 
 	}
 
 	@Override
 	public boolean onCreate() {
 		tables = new LinkedList<>();
-		tables.add(new DisplaySizesProcessor(getContext(), DISPLAY_SIZES));
 		tables.add(new ImagesProcessor(getContext(), IMAGES));
+		tables.add(new DisplaySizesProcessor(getContext(), DISPLAY_SIZES));
 
 		helper = new DatabaseHelper(getContext(), tables);
 
@@ -49,7 +51,7 @@ public class Provider extends ContentProvider {
 	public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 		synchronized (lock) {
 			Processor processor = findProcessor(uri);
-			return processor.query(helper.getWritableDatabase(), uri, projection, selection,selectionArgs, sortOrder);
+			return processor.query(helper.getWritableDatabase(), uri, projection, selection, selectionArgs, sortOrder);
 		}
 	}
 

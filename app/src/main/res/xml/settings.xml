@@ -6,7 +6,16 @@
 		android:key="fav_animal"
 		android:entries="@array/animals_array"
 		android:entryValues="@array/animals_values"
-		android:defaultValue="1"
+		android:defaultValue="@integer/fav_animal_pref_default_value"
+		/>
+
+
+	<ListPreference
+		android:title="Choose sort order"
+		android:key="sort_order"
+		android:entries="@array/sort_order_array"
+		android:entryValues="@array/sort_order_pos_array"
+		android:defaultValue="@string/sort_order_pref_default_value"
 		/>
 
 </PreferenceScreen>

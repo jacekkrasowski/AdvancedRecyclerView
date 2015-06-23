@@ -30,6 +30,7 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.settings);
 		updateSummary(Config.KEY_PREF_FAV_ANIMAL);
+		updateSummary(Config.KET_PREF_SORT_ORDER);
 	}
 
 	@Override
@@ -52,12 +53,18 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 	private void updateSummary(String key) {
 		Preference preference = findPreference(key);
 		SharedPreferences sp = preference.getSharedPreferences();
+		Preference pref = findPreference(key);
 		switch (preference.getKey()) {
 			case Config.KEY_PREF_FAV_ANIMAL:
-				Preference pref = findPreference(key);
 				String[] animals = getResources().getStringArray(R.array.animals_array);
-				Integer val = Integer.parseInt(sp.getString(key, "1"));
-				pref.setSummary(getString(R.string.your_favourite_animal) + animals[val - 1]);
+				int val = Integer.parseInt(sp.getString(key, Integer.toString(getResources().getInteger(R.integer.fav_animal_pref_default_value))));
+				pref.setSummary(getString(R.string.your_favourite_animal,animals[val - 1]));
+				break;
+
+			case Config.KET_PREF_SORT_ORDER:
+				String[] orderArray = getResources().getStringArray(R.array.sort_order_array);
+				int pos = Integer.parseInt(sp.getString(Config.KET_PREF_SORT_ORDER, getString(R.string.sort_order_pref_default_value)));
+				pref.setSummary(getString(R.string.your_sort_order, orderArray[pos -1]));
 				break;
 		}
 

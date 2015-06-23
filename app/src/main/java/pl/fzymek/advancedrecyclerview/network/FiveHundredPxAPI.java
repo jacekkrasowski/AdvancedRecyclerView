@@ -16,4 +16,8 @@ public interface FiveHundredPxAPI {
 	@GET("/search/images?fields=detail_set,display_set")
 	Observable<Result> getImages(@Query("phrase") String phrase);
 
+	@Headers("Api-Key: " + API.CONSUMER_KEY)
+	@GET("/search/images?fields=detail_set,display_set")
+	Observable<Result> getImages(@Query("phrase") String phrase, @Query("sort_order") String sort_order);
+
 }

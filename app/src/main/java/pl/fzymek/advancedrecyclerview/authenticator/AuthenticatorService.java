@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
+import pl.fzymek.advancedrecyclerview.config.Config;
+
 /**
  * Created by Filip Zymek on 2015-06-22.
  */
@@ -15,11 +17,8 @@ public class AuthenticatorService extends Service {
 
 	Authenticator authenticator;
 
-	private static final String ACCOUNT_TYPE = "pl.fzymek.advancedrecyclerview";
-	public static final String ACCOUNT_NAME = "sync";
-
 	public static Account getSyncAccount() {
-		return new Account(ACCOUNT_NAME, ACCOUNT_TYPE);
+		return new Account(Config.ACCOUNT_NAME, Config.ACCOUNT_TYPE);
 	}
 
 	@Override

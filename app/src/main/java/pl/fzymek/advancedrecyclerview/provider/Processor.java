@@ -25,6 +25,7 @@ public abstract class Processor implements DatabaseInterface {
 
 	}
 
+
 	public boolean containsCode(int code) {
 		return this.code == code;
 	}

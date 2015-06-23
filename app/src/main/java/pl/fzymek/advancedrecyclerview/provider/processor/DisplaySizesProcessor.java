@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.util.Log;
 
 import java.util.Calendar;
 
@@ -26,12 +27,12 @@ public class DisplaySizesProcessor extends DatabaseProcessor {
 		StringBuilder sql = new StringBuilder();
 		sql.append("CREATE TABLE " + name + " (")
 			.append(Contract.DisplaySizes._ID + " INTEGER PRIMARY KEY, ")
-			.append(Contract.DisplaySizes.IMAGE_ID + " INTEGER, ")
+			.append(Contract.DisplaySizes.IMAGE_ID + " TEXT, ")
 			.append(Contract.DisplaySizes.NAME + " TEXT, ")
 			.append(Contract.DisplaySizes.URI + " TEXT, ")
 			.append(Contract.DisplaySizes.VALIDITY + " INTEGER, ")
 			.append("FOREIGN KEY (" + Contract.DisplaySizes.IMAGE_ID + ") " +
-				"REFERENCES " + Contract.Images.TABLE_NAME + "(" + Contract.Images._ID + ")")
+				"REFERENCES " + Contract.Images.TABLE_NAME + "(" + Contract.Images.ID + ") ON DELETE CASCADE")
 			.append(")");
 		db.execSQL(sql.toString());
 	}
@@ -43,6 +44,9 @@ public class DisplaySizesProcessor extends DatabaseProcessor {
 
 	@Override
 	public Cursor query(SQLiteDatabase db, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+
+		purge(db);
+
 		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 		queryBuilder.setTables(name);
 		Cursor c = queryBuilder.query(
@@ -61,8 +65,9 @@ public class DisplaySizesProcessor extends DatabaseProcessor {
 
 	@Override
 	public Uri insert(SQLiteDatabase db, Uri uri, ContentValues values) {
-		long validity = Calendar.getInstance().getTimeInMillis() + Config.DEFAULT_VALIDITY;
+		Log.d("DisplaySizesProcessor", "INSERT uri = [" + uri + "], values = [" + values + "]");
 
+		long validity = Calendar.getInstance().getTimeInMillis() + Config.DEFAULT_VALIDITY;
 		ContentValues valuesWithValidity = new ContentValues(values);
 		valuesWithValidity.put(Contract.Images.VALIDITY, validity);
 

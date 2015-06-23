@@ -29,10 +29,10 @@ public class SyncUtils {
 		AccountManager accountManager = (AccountManager) context.getSystemService(Context.ACCOUNT_SERVICE);
 		if (accountManager.addAccountExplicitly(syncAccount, null, null)) {
 			ContentResolver.setIsSyncable(syncAccount, Contract.AUTHORITY, 1);
-			ContentResolver.setSyncAutomatically(syncAccount, Contract.AUTHORITY, true);
+//			ContentResolver.setSyncAutomatically(syncAccount, Contract.AUTHORITY, true);
 			Bundle extras = new Bundle();
 			extras.putBoolean(Config.IS_AUTOMATIC_SYNC, true);
-			ContentResolver.addPeriodicSync(syncAccount, Contract.AUTHORITY, extras, TimeUnit.SECONDS.toSeconds(5));
+			ContentResolver.addPeriodicSync(syncAccount, Contract.AUTHORITY, extras, TimeUnit.SECONDS.toSeconds(60));
 			isNewAccount = true;
 		}
 

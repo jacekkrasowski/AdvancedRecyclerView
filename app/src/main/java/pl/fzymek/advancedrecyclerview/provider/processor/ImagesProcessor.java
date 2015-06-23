@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.util.Log;
 
 import java.util.Calendar;
 
@@ -27,14 +28,15 @@ public class ImagesProcessor extends DatabaseProcessor {
 		StringBuilder sql = new StringBuilder();
 		sql.append("CREATE TABLE " + name + " (")
 			.append(Contract.Images._ID + " INTEGER PRIMARY KEY, ")
-			.append(Contract.Images.ID + " TEXT, ")
+			.append(Contract.Images.ID + " TEXT UNIQUE, ")
 			.append(Contract.Images.TITLE + " TEXT, ")
 			.append(Contract.Images.ARTIST + " TEXT, ")
 			.append(Contract.Images.CAPTION + " TEXT, ")
 			.append(Contract.Images.COLLECTION_NAME + " TEXT, ")
 			.append(Contract.Images.DATE_CREATED + " TEXT, ")
 			.append(Contract.Images.VALIDITY + " INTEGER")
-			.append(")");
+			.append(");")
+			.append("CREATE UNIQUE INDEX id1 ON " + name +"(" + Contract.Images.ID +")");
 		db.execSQL(sql.toString());
 	}
 
@@ -64,8 +66,9 @@ public class ImagesProcessor extends DatabaseProcessor {
 
 	@Override
 	public Uri insert(SQLiteDatabase db, Uri uri, ContentValues values) {
-		long validity = Calendar.getInstance().getTimeInMillis() + Config.DEFAULT_VALIDITY;
+		Log.d("ImagesProcessor", "INSERT uri = [" + uri + "], values = [" + values + "]");
 
+		long validity = Calendar.getInstance().getTimeInMillis() + Config.DEFAULT_VALIDITY;
 		ContentValues valuesWithValidity = new ContentValues(values);
 		valuesWithValidity.put(Contract.Images.VALIDITY, validity);
 

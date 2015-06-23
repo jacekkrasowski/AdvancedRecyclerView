@@ -10,4 +10,20 @@
 		<item>2</item>
 		<item>3</item>
 	</string-array>
+
+	<string-array name="sort_order_array">
+		<item>Best</item>
+		<item>Newest</item>
+		<item>Most popular</item>
+	</string-array>
+	<string-array name="sort_order_pos_array">
+		<item>1</item>
+		<item>2</item>
+		<item>3</item>
+	</string-array>
+	<string-array name="sort_order_values">
+		<item>best</item>
+		<item>newest</item>
+		<item>most_popular</item>
+	</string-array>
 </resources>

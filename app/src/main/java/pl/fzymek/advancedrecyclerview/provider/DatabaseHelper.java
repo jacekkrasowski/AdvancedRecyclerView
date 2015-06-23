@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 import android.util.SparseArray;
 
 import java.util.List;
@@ -14,6 +15,8 @@ import pl.fzymek.advancedrecyclerview.config.Config;
  * Created by Filip Zymek on 2015-06-22.
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
+
+	private final static String TAG = DatabaseHelper.class.getSimpleName();
 
 	private final List<Processor> tables;
 
@@ -47,6 +50,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			db.setTransactionSuccessful();
 		} finally {
 			db.endTransaction();
+		}
+	}
+
+	@Override
+	public void onOpen(SQLiteDatabase db) {
+		super.onOpen(db);
+		if (!db.isReadOnly()) {
+			Log.d(TAG, "enabling foreign keys");
+			db.execSQL("PRAGMA foreign_keys = ON;");
 		}
 	}
 }
