@@ -1,8 +1,11 @@
 package pl.fzymek.advancedrecyclerview.activity;
 
+import android.accounts.Account;
 import android.app.ActivityManager;
 import android.app.FragmentTransaction;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SyncStatusObserver;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -21,11 +24,16 @@ import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import javax.inject.Inject;
 
 import pl.fzymek.advancedrecyclerview.R;
+import pl.fzymek.advancedrecyclerview.authenticator.AuthenticatorService;
 import pl.fzymek.advancedrecyclerview.fragment.MainFragment;
 import pl.fzymek.advancedrecyclerview.fragment.SettingsFragment;
+import pl.fzymek.advancedrecyclerview.provider.Contract;
+import pl.fzymek.advancedrecyclerview.sync.SyncUtils;
 
 
 public class MainActivity extends BaseActivity {
+
+	private final static String TAG = MainActivity.class.getSimpleName();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +48,8 @@ public class MainActivity extends BaseActivity {
 				.commit();
 		}
 
+		Log.d(TAG, "Setting automatic syncs");
+		SyncUtils.createSyncAccount(this);
 	}
 
 	@Override

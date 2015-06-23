@@ -14,4 +14,8 @@ public interface Config {
 	String PREF_FAV_ANIMAL_DEFAULT = "1";
 	String KEY_PREF_USE_STAGGERED_GRID = "use_staggered_grid";
 	long DEFAULT_VALIDITY = TimeUnit.MINUTES.toMillis(2);
+	String IS_AUTOMATIC_SYNC = "is_automatic_sync";
+	String KEY_PREF_ACCOUNT_SETUP_COMPLETE = "key_pref_account_setup_complete";
+
+	String ACCOUNT_TYPE = "pl.fzymek.advancedrecyclerview";
 }
