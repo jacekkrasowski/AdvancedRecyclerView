@@ -67,9 +67,9 @@ public class DisplaySizesProcessor extends DatabaseProcessor {
 	public Uri insert(SQLiteDatabase db, Uri uri, ContentValues values) {
 		long validity = Calendar.getInstance().getTimeInMillis() + Config.DEFAULT_VALIDITY;
 		ContentValues valuesWithValidity = new ContentValues(values);
-		valuesWithValidity.put(Contract.Images.VALIDITY, validity);
+		valuesWithValidity.put(Contract.DisplaySizes.VALIDITY, validity);
 
-		long id = db.insertWithOnConflict(name, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+		long id = db.insertWithOnConflict(name, null, valuesWithValidity, SQLiteDatabase.CONFLICT_REPLACE);
 		return Uri.parse(Contract.Images.CONTENT_URI + "/" + id);
 	}
 }

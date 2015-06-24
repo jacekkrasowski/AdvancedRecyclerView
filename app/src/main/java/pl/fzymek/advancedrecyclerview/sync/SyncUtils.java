@@ -31,7 +31,7 @@ public class SyncUtils {
 			ContentResolver.setIsSyncable(syncAccount, Contract.AUTHORITY, 1);
 //			ContentResolver.setSyncAutomatically(syncAccount, Contract.AUTHORITY, true);
 			Bundle extras = new Bundle();
-			extras.putBoolean(Config.IS_AUTOMATIC_SYNC, true);
+			extras.putBoolean(Config.EXTRA_IS_AUTOMATIC_SYNC, true);
 			ContentResolver.addPeriodicSync(syncAccount, Contract.AUTHORITY, extras, TimeUnit.SECONDS.toSeconds(60));
 			isNewAccount = true;
 		}
@@ -51,7 +51,7 @@ public class SyncUtils {
 		// Disable sync backoff and ignore sync preferences. In other words...perform sync NOW!
 		b.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
 		b.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
-		b.putBoolean(Config.IS_AUTOMATIC_SYNC, false);
+		b.putBoolean(Config.EXTRA_IS_AUTOMATIC_SYNC, false);
 		ContentResolver.requestSync(
 			AuthenticatorService.getSyncAccount(),            // Sync account
 			Contract.AUTHORITY,                                        // Content authority

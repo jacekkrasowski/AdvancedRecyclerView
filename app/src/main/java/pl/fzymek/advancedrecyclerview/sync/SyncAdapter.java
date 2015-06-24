@@ -18,6 +18,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,8 +73,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 		Log.d(TAG, "Performing sync with params: " + searchPhrase + " " + sortOrder);
 
-		if (extras.containsKey(Config.IS_AUTOMATIC_SYNC)) {
-			Log.d(TAG, "Performing automatic sync? " + extras.getBoolean(Config.IS_AUTOMATIC_SYNC));
+		if (extras.containsKey(Config.EXTRA_IS_AUTOMATIC_SYNC)) {
+			Log.d(TAG, "Performing automatic sync? " + extras.getBoolean(Config.EXTRA_IS_AUTOMATIC_SYNC));
 		}
 
 		Observable<Result> images = fiveHundredApi.getImages(searchPhrase, sortOrder);
@@ -101,6 +102,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		} catch (RemoteException | OperationApplicationException e) {
 			Log.e(TAG, "error applying batch!!!", e);
 		}
+
+		Log.d(TAG, "Syncing result: "+ syncResult);
 	}
 
 	private void mergeExistingImagesInDb(Map<String, Image> images, ArrayList<ContentProviderOperation> batch, SyncResult syncResult) {
@@ -115,6 +118,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		while (imagesCursor.moveToNext()) {
 			syncResult.stats.numEntries++;
 			Image local = Image.fromCursor(imagesCursor);
+			long now = Calendar.getInstance().getTimeInMillis();
+			Log.d(TAG, "local.validity = " + local.getValidity() + " now: " + now);
 			Image remote = images.get(local.getId());
 			if (remote != null) {
 				//we have hit - remove entry to prevent addition and check if local data needs update
@@ -130,20 +135,26 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 					);
 					syncResult.stats.numUpdates++;
 				} else {
-					Log.d(TAG, "No action for: "+ existingUri);
+					Log.d(TAG, "No action for: " + existingUri);
 				}
 
 				//update display sizes for this image entry
 				mergeExistingDisplaySizesToDb(remote, batch, syncResult);
 
 			} else {
-				//network results does not contain cached result, delete it
-//				Uri deleteUri = Contract.Images.CONTENT_URI.buildUpon().appendPath(Integer.toString(local.get_id())).build();
-//				batch.add(ContentProviderOperation.newDelete(deleteUri).build());
-//				syncResult.stats.numDeletes++;
+				if (updateByNetwork()) {
+					//network results does not contain cached result, delete it
+					Uri deleteUri = Contract.Images.CONTENT_URI.buildUpon().appendPath(Integer.toString(local.get_id())).build();
+					batch.add(ContentProviderOperation.newDelete(deleteUri).build());
+					syncResult.stats.numDeletes++;
+				}
 			}
 		}
 		imagesCursor.close();
+	}
+
+	private boolean updateByNetwork() {
+		return !PreferenceManager.getDefaultSharedPreferences(getContext()).getBoolean(Config.KEY_PREF_PURGE_BY_VALIDITY, getContext().getResources().getBoolean(R.bool.purge_by_validity_default_value));
 	}
 
 	private void addNewImagesToDb(Map<String, Image> images, ArrayList<ContentProviderOperation> batch, SyncResult syncResult) {
@@ -203,10 +214,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				}
 
 			} else {
-				//network results does not contain cached result, delete it
-//				Uri deleteUri = Contract.DisplaySizes.CONTENT_URI.buildUpon().appendPath(Integer.toString(local.get_id())).build();
-//				batch.add(ContentProviderOperation.newDelete(deleteUri).build());
-//				syncResult.stats.numDeletes++;
+				if (updateByNetwork()) {
+					//network results does not contain cached result, delete it
+					Uri deleteUri = Contract.DisplaySizes.CONTENT_URI.buildUpon().appendPath(Integer.toString(local.get_id())).build();
+					batch.add(ContentProviderOperation.newDelete(deleteUri).build());
+					syncResult.stats.numDeletes++;
+				}
 			}
 
 		}
@@ -227,7 +240,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 	protected String getSearchPhrase() {
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-		int key = Integer.parseInt(sharedPreferences.getString(Config.KEY_PREF_FAV_ANIMAL, Config.PREF_FAV_ANIMAL_DEFAULT));
+		int key = Integer.parseInt(sharedPreferences.getString(Config.KEY_PREF_FAV_ANIMAL, getContext().getString(R.string.fav_animal_pref_default_value)));
 		String animal = getContext().getResources().getStringArray(R.array.animals_array)[key - 1];
 		return animal;
 	}
@@ -235,7 +248,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 	protected String getSortOrder() {
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 		String[] orderArray = getContext().getResources().getStringArray(R.array.sort_order_values);
-		int pos = Integer.parseInt(sharedPreferences.getString(Config.KET_PREF_SORT_ORDER, getContext().getString(R.string.sort_order_pref_default_value)));
+		int pos = Integer.parseInt(sharedPreferences.getString(Config.KEY_PREF_SORT_ORDER, getContext().getString(R.string.sort_order_pref_default_value)));
 		return orderArray[pos - 1];
 	}
 }

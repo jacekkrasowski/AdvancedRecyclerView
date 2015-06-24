@@ -68,12 +68,11 @@ public class ImagesProcessor extends DatabaseProcessor {
 
 	@Override
 	public Uri insert(SQLiteDatabase db, Uri uri, ContentValues values) {
-
 		long validity = Calendar.getInstance().getTimeInMillis() + Config.DEFAULT_VALIDITY;
 		ContentValues valuesWithValidity = new ContentValues(values);
 		valuesWithValidity.put(Contract.Images.VALIDITY, validity);
 
-		long id = db.insertWithOnConflict(name, null, values, SQLiteDatabase.CONFLICT_REPLACE);
+		long id = db.insertWithOnConflict(name, null, valuesWithValidity, SQLiteDatabase.CONFLICT_REPLACE);
 		return Uri.parse(Contract.Images.CONTENT_URI + "/" + id);
 	}
 }

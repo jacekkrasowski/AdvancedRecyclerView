@@ -11,5 +11,11 @@
 	<string name="action_staggered_grid">Use fancy grid</string>
 
 	<string name="sort_order_pref_default_value">1</string>
+	<string name="fav_animal_pref_default_value">1</string>
+	<string name="settings_fav_animal_title">Choose favourite animal</string>
+	<string name="settings_sort_order_title">Choose sort order</string>
+	<string name="settings_purge_by_validity">Clear data when expired</string>
+	<string name="your_update_will_use_validity">Delete expired data</string>
+	<string name="your_update_will_use_network">Overwrite expired data</string>
 
 </resources>

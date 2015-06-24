@@ -2,20 +2,30 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
 	<ListPreference
-		android:title="Choose favourite animal"
-		android:key="fav_animal"
+		android:defaultValue="@integer/fav_animal_pref_default_value"
 		android:entries="@array/animals_array"
 		android:entryValues="@array/animals_values"
-		android:defaultValue="@integer/fav_animal_pref_default_value"
+		android:key="fav_animal"
+		android:title="@string/settings_fav_animal_title"
 		/>
 
 
 	<ListPreference
-		android:title="Choose sort order"
-		android:key="sort_order"
+		android:defaultValue="@string/sort_order_pref_default_value"
 		android:entries="@array/sort_order_array"
 		android:entryValues="@array/sort_order_pos_array"
-		android:defaultValue="@string/sort_order_pref_default_value"
+		android:key="sort_order"
+		android:title="@string/settings_sort_order_title"
 		/>
+
+
+	<SwitchPreference
+		android:defaultValue="false"
+		android:key="purge_by_validity"
+		android:summaryOff="@string/your_update_will_use_network"
+		android:summaryOn="@string/your_update_will_use_validity"
+		android:title="@string/settings_purge_by_validity"
+		/>
+
 
 </PreferenceScreen>

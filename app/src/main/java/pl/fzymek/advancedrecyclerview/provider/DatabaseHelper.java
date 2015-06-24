@@ -27,11 +27,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	private final List<Processor> tables;
 
+	//use when you want to log sql queryies
+	private final SQLiteDatabase.CursorFactory loggableCursorFactory = (db, masterQuery, editTable, query) -> {
+		Log.d("SQL", query.toString());
+		return new SQLiteCursor(masterQuery, editTable, query);
+	};
+
 	public DatabaseHelper(Context context, List<Processor> tables) {
-		super(context, Config.DB_NAME, (db, masterQuery, editTable, query) -> {
-			Log.d("SQL", query.toString());
-			return new SQLiteCursor(masterQuery, editTable, query);
-		}, Config.DB_VERSION);
+		super(context, Config.DB_NAME, null, Config.DB_VERSION);
 		this.tables = tables;
 	}
 
@@ -68,10 +71,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public void onOpen(SQLiteDatabase db) {
 		super.onOpen(db);
 		if (!db.isReadOnly()) {
-			Log.d(TAG, "enabling foreign keys");
 			if (Utils.hasApi(Build.VERSION_CODES.JELLY_BEAN)) {
+				Log.d(TAG, "enabling foreign keys using db method");
 				db.setForeignKeyConstraintsEnabled(true);
 			} else {
+				Log.d(TAG, "enabling foreign keys using PRAGMA");
 				db.execSQL("PRAGMA foreign_keys = ON;");
 			}
 		}

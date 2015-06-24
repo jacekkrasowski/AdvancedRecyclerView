@@ -102,7 +102,7 @@ public class MainController extends ActivityController<MainUI> implements Observ
 
 	protected String getSearchPhrase() {
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-		int key = Integer.parseInt(sharedPreferences.getString(Config.KEY_PREF_FAV_ANIMAL, Config.PREF_FAV_ANIMAL_DEFAULT));
+		int key = Integer.parseInt(sharedPreferences.getString(Config.KEY_PREF_FAV_ANIMAL, getActivity().getString(R.string.fav_animal_pref_default_value)));
 		String animal = getActivity().getResources().getStringArray(R.array.animals_array)[key - 1];
 		return animal;
 	}

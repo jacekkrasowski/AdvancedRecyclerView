@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
@@ -15,6 +14,12 @@ import pl.fzymek.advancedrecyclerview.config.Config;
 
 
 public class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
+
+	private final static String [] PREFERENCES = {
+		Config.KEY_PREF_FAV_ANIMAL,
+		Config.KEY_PREF_SORT_ORDER,
+		Config.KEY_PREF_PURGE_BY_VALIDITY
+	};
 
 	public SettingsFragment() {
 		// Required empty public constructor
@@ -29,8 +34,9 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.settings);
-		updateSummary(Config.KEY_PREF_FAV_ANIMAL);
-		updateSummary(Config.KET_PREF_SORT_ORDER);
+		for(String pref: PREFERENCES) {
+			updateSummary(pref);
+		}
 	}
 
 	@Override
@@ -61,10 +67,19 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
 				pref.setSummary(getString(R.string.your_favourite_animal,animals[val - 1]));
 				break;
 
-			case Config.KET_PREF_SORT_ORDER:
+			case Config.KEY_PREF_SORT_ORDER:
 				String[] orderArray = getResources().getStringArray(R.array.sort_order_array);
-				int pos = Integer.parseInt(sp.getString(Config.KET_PREF_SORT_ORDER, getString(R.string.sort_order_pref_default_value)));
+				int pos = Integer.parseInt(sp.getString(Config.KEY_PREF_SORT_ORDER, getString(R.string.sort_order_pref_default_value)));
 				pref.setSummary(getString(R.string.your_sort_order, orderArray[pos -1]));
+				break;
+
+			case Config.KEY_PREF_PURGE_BY_VALIDITY:
+				boolean purgeByValidity = sp.getBoolean(Config.KEY_PREF_PURGE_BY_VALIDITY, getResources().getBoolean(R.bool.purge_by_validity_default_value));
+				if (purgeByValidity) {
+					pref.setSummary(getString(R.string.your_update_will_use_validity));
+				} else {
+					pref.setSummary(getString(R.string.your_update_will_use_network));
+				}
 				break;
 		}
 
