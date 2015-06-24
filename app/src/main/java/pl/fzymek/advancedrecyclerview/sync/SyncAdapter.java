@@ -18,7 +18,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +32,6 @@ import pl.fzymek.advancedrecyclerview.network.FiveHundredPxAPI;
 import pl.fzymek.advancedrecyclerview.provider.Contract;
 import retrofit.RestAdapter;
 import rx.Observable;
-import rx.Subscriber;
 
 /**
  * Created by Filip Zymek on 2015-06-22.
@@ -72,7 +70,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		String searchPhrase = getSearchPhrase();
 		String sortOrder = getSortOrder();
 
-		Log.d(TAG, "Performing sync with params: "+ searchPhrase + " " + sortOrder);
+		Log.d(TAG, "Performing sync with params: " + searchPhrase + " " + sortOrder);
 
 		if (extras.containsKey(Config.IS_AUTOMATIC_SYNC)) {
 			Log.d(TAG, "Performing automatic sync? " + extras.getBoolean(Config.IS_AUTOMATIC_SYNC));
@@ -80,90 +78,96 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
 		Observable<Result> images = fiveHundredApi.getImages(searchPhrase, sortOrder);
 
-		images.subscribe(new Subscriber<Result>() {
-			@Override
-			public void onCompleted() {
-				Log.d(TAG, "onCompleted");
-			}
-
-			@Override
-			public void onError(Throwable e) {
-				Log.d(TAG, "onError", e);
-			}
-
-			@Override
-			public void onNext(Result result) {
-				//save to database
-
-				Log.d(TAG, "onNext: " + result);
-				Map<String, Image> images = toMap(result.getImages());
-
-				ArrayList<ContentProviderOperation> batch = new ArrayList<>();
-				Cursor imagesCursor = resolver.query(Contract.Images.CONTENT_URI, Contract.Images.TABLE_COLUMNS, null, null, null);
-				Log.d(TAG, "Found :" + imagesCursor.getCount() + " local entries. Merginig....");
-
-				while (imagesCursor.moveToNext()) {
-					syncResult.stats.numEntries++;
-					Image localImage = Image.fromCursor(imagesCursor);
-					Image networkImage = images.get(localImage.getId());
-					if (networkImage != null) {
-						//we have hit
-						images.remove(localImage.getId());
-						Uri existingUri = Contract.Images.CONTENT_URI.buildUpon().appendPath(Integer.toString(localImage.get_id())).build();
-						if (needsUpdate(localImage, networkImage)) {
-							Log.d(TAG, "image entry needs update");
-							batch.add(ContentProviderOperation.newUpdate(existingUri)
-									.withValues(networkImage.toContentValues())
-									.build()
-							);
-							syncResult.stats.numUpdates++;
-						} else {
-							Log.d(TAG, "No action for: " + existingUri);
-						}
-						updateDisplaySizes(networkImage, batch, syncResult);
-
-					} else {
-						Uri deleteUri = Contract.Images.CONTENT_URI.buildUpon().appendPath(Integer.toString(localImage.get_id())).build();
-						Log.d(TAG, "image entry needs delete: "+ deleteUri);
-						batch.add(ContentProviderOperation.newDelete(deleteUri).build());
-						syncResult.stats.numDeletes++;
-					}
-				}
-				imagesCursor.close();
-
-
-				for (Image image : images.values()) {
-					ContentValues values1 = image.toContentValues();
-					Log.d(TAG, "image needs insert with values: " + values1);
-					batch.add(ContentProviderOperation.newInsert(Contract.Images.CONTENT_URI)
-						.withValues(values1)
-						.build());
-					for (DisplaySize displaySize : image.getDisplaySizes()) {
-						ContentValues values = displaySize.toContentValues();
-						values.put(Contract.DisplaySizes.IMAGE_ID, image.getId());
-						Log.d(TAG, "displaySize needs insert with values: "+ values);
-						batch.add(ContentProviderOperation.newInsert(Contract.DisplaySizes.CONTENT_URI)
-							.withValues(values)
-							.build());
-						syncResult.stats.numInserts++;
-					}
-					syncResult.stats.numInserts++;
-				}
-
-				try {
-					Log.d(TAG, "Merging ready... applying batch with size (" + batch.size() + ")");
-					resolver.applyBatch(Contract.AUTHORITY, batch);
-					resolver.notifyChange(Contract.Images.CONTENT_URI, null, false);
-					resolver.notifyChange(Contract.DisplaySizes.CONTENT_URI, null, false);
-				} catch (RemoteException | OperationApplicationException e) {
-					Log.e(TAG, "error applying batch!!!", e);
-				}
-			}
-		});
-
+		images.subscribe(
+			result -> processResult(result, syncResult),
+			error -> Log.d(TAG, "onError", error),
+			() -> Log.d(TAG, "onCompleted")
+		);
 	}
 
-	private void updateDisplaySizes(Image image, List<ContentProviderOperation> batch, SyncResult syncResult) {
+	public void processResult(Result result, SyncResult syncResult) {
+		//merge results to database
+		Map<String, Image> images = toMap(result.getImages());
+		ArrayList<ContentProviderOperation> batch = new ArrayList<>();
+
+		mergeExistingImagesInDb(images, batch, syncResult);
+		addNewImagesToDb(images, batch, syncResult);
+
+		try {
+			Log.d(TAG, "Merge batch ready... applying (" + batch.size() + ") changes");
+			resolver.applyBatch(Contract.AUTHORITY, batch);
+			resolver.notifyChange(Contract.Images.CONTENT_URI, null, false);
+			resolver.notifyChange(Contract.DisplaySizes.CONTENT_URI, null, false);
+		} catch (RemoteException | OperationApplicationException e) {
+			Log.e(TAG, "error applying batch!!!", e);
+		}
+	}
+
+	private void mergeExistingImagesInDb(Map<String, Image> images, ArrayList<ContentProviderOperation> batch, SyncResult syncResult) {
+		//get local images
+		Cursor imagesCursor = resolver.query(
+			Contract.Images.CONTENT_URI,
+			Contract.Images.TABLE_COLUMNS,
+			null,
+			null,
+			null);
+
+		while (imagesCursor.moveToNext()) {
+			syncResult.stats.numEntries++;
+			Image local = Image.fromCursor(imagesCursor);
+			Image remote = images.get(local.getId());
+			if (remote != null) {
+				//we have hit - remove entry to prevent addition and check if local data needs update
+				images.remove(local.getId());
+
+				Uri existingUri = Contract.Images.CONTENT_URI.buildUpon().appendPath(Integer.toString(local.get_id())).build();
+
+				//check if we need to update local data
+				if (needsUpdate(local, remote)) {
+					batch.add(ContentProviderOperation.newUpdate(existingUri)
+							.withValues(remote.toContentValues())
+							.build()
+					);
+					syncResult.stats.numUpdates++;
+				} else {
+					Log.d(TAG, "No action for: "+ existingUri);
+				}
+
+				//update display sizes for this image entry
+				mergeExistingDisplaySizesToDb(remote, batch, syncResult);
+
+			} else {
+				//network results does not contain cached result, delete it
+//				Uri deleteUri = Contract.Images.CONTENT_URI.buildUpon().appendPath(Integer.toString(local.get_id())).build();
+//				batch.add(ContentProviderOperation.newDelete(deleteUri).build());
+//				syncResult.stats.numDeletes++;
+			}
+		}
+		imagesCursor.close();
+	}
+
+	private void addNewImagesToDb(Map<String, Image> images, ArrayList<ContentProviderOperation> batch, SyncResult syncResult) {
+		for (Image image : images.values()) {
+			//add new image entry to db
+			ContentValues imgValues = image.toContentValues();
+			batch.add(ContentProviderOperation.newInsert(Contract.Images.CONTENT_URI)
+				.withValues(imgValues)
+				.build());
+			//add new displaysizes entries for new image
+			for (DisplaySize displaySize : image.getDisplaySizes()) {
+				ContentValues dsValues = displaySize.toContentValues();
+				dsValues.put(Contract.DisplaySizes.IMAGE_ID, image.getId());
+				batch.add(ContentProviderOperation.newInsert(Contract.DisplaySizes.CONTENT_URI)
+					.withValues(dsValues)
+					.build());
+				syncResult.stats.numInserts++;
+			}
+			syncResult.stats.numInserts++;
+		}
+	}
+
+	private void mergeExistingDisplaySizesToDb(Image image, List<ContentProviderOperation> batch, SyncResult syncResult) {
+		//get local ds entries
 		Cursor displaySizesCursor = resolver.query(
 			Contract.DisplaySizes.CONTENT_URI,
 			Contract.DisplaySizes.TABLE_COLUMNS,
@@ -173,22 +177,23 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		);
 
 		HashMap<String, DisplaySize> displaySizes = new HashMap<>();
-		for(DisplaySize size: image.getDisplaySizes()) {
+		for (DisplaySize size : image.getDisplaySizes()) {
 			displaySizes.put(size.getName(), size);
 		}
-
 
 		while (displaySizesCursor.moveToNext()) {
 			syncResult.stats.numEntries++;
 			DisplaySize local = DisplaySize.fromCursor(displaySizesCursor);
 			DisplaySize remote = displaySizes.get(local.getName());
+
 			if (remote != null) {
+				//remove entry fom map to prevent duplicates and check if we need update
 				displaySizes.remove(local.getName());
 				Uri existingUri = Contract.DisplaySizes.CONTENT_URI.buildUpon().appendPath(Integer.toString(local.get_id())).build();
 
+				//check if we need to update local data
 				if (needsUpdate(local, remote)) {
 					ContentValues values = remote.toContentValues();
-					Log.d(TAG, "display size needs update with values: " + values);
 					batch.add(ContentProviderOperation.newUpdate(Contract.DisplaySizes.CONTENT_URI)
 						.withValues(values)
 						.build());
@@ -198,10 +203,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 				}
 
 			} else {
-				Uri deleteUri = Contract.DisplaySizes.CONTENT_URI.buildUpon().appendPath(Integer.toString(local.get_id())).build();
-				Log.d(TAG, "display size needs delete: "+ deleteUri);
-				batch.add(ContentProviderOperation.newDelete(deleteUri).build());
-				syncResult.stats.numDeletes++;
+				//network results does not contain cached result, delete it
+//				Uri deleteUri = Contract.DisplaySizes.CONTENT_URI.buildUpon().appendPath(Integer.toString(local.get_id())).build();
+//				batch.add(ContentProviderOperation.newDelete(deleteUri).build());
+//				syncResult.stats.numDeletes++;
 			}
 
 		}
@@ -231,6 +236,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
 		String[] orderArray = getContext().getResources().getStringArray(R.array.sort_order_values);
 		int pos = Integer.parseInt(sharedPreferences.getString(Config.KET_PREF_SORT_ORDER, getContext().getString(R.string.sort_order_pref_default_value)));
-		return orderArray[pos -1];
+		return orderArray[pos - 1];
 	}
 }

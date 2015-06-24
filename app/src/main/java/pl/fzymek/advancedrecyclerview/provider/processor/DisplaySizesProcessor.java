@@ -65,8 +65,6 @@ public class DisplaySizesProcessor extends DatabaseProcessor {
 
 	@Override
 	public Uri insert(SQLiteDatabase db, Uri uri, ContentValues values) {
-		Log.d("DisplaySizesProcessor", "INSERT uri = [" + uri + "], values = [" + values + "]");
-
 		long validity = Calendar.getInstance().getTimeInMillis() + Config.DEFAULT_VALIDITY;
 		ContentValues valuesWithValidity = new ContentValues(values);
 		valuesWithValidity.put(Contract.Images.VALIDITY, validity);

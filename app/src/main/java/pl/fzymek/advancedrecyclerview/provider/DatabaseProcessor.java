@@ -3,6 +3,7 @@ package pl.fzymek.advancedrecyclerview.provider;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.Looper;
 import android.util.Log;
@@ -24,13 +25,11 @@ public abstract class DatabaseProcessor extends Processor {
 
 	@Override
 	public int update(SQLiteDatabase db, Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-		Log.d("DatabaseProcessor", "UPDATE uri = [" + uri + "], selection = [" + selection + "], selectionArgs = [" + selectionArgs + "]");
 		return db.update(name, values, selection, selectionArgs);
 	}
 
 	@Override
 	public int delete(SQLiteDatabase db, Uri uri, String selection, String[] selectionArgs) {
-		Log.d("DatabaseProcessor", "DELETE uri = [" + uri + "], selection = [" + selection + "], selectionArgs = [" + selectionArgs + "]");
 		return db.delete(name, selection, selectionArgs);
 	}
 
@@ -39,4 +38,5 @@ public abstract class DatabaseProcessor extends Processor {
 		int delete = db.delete(name, Contract.VALIDITY + "< ?", new String[]{Long.toString(now)});
 		Log.d("DatabaseProcessor", "purged: " + delete + " items from " + name);
 	}
+
 }
