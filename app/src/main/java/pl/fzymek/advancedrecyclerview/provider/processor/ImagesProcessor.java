@@ -14,6 +14,7 @@ import pl.fzymek.advancedrecyclerview.config.Config;
 import pl.fzymek.advancedrecyclerview.provider.Contract;
 import pl.fzymek.advancedrecyclerview.provider.DatabaseProcessor;
 import pl.fzymek.advancedrecyclerview.provider.Processor;
+import pl.fzymek.advancedrecyclerview.sync.SyncUtils;
 
 /**
  * Created by Filip Zymek on 2015-06-22.
@@ -48,7 +49,12 @@ public class ImagesProcessor extends DatabaseProcessor {
 	@Override
 	public Cursor query(SQLiteDatabase db, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
 
-		purge(db);
+		int purgedCount = purge(db);
+		if (purgedCount > 0) {
+			//fetch new items if some of them are purged due to expiration
+			Log.d("ImagesProcessor", "Purged " + purgedCount + " items. Requesting sync.");
+			SyncUtils.sync();
+		}
 
 		SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
 		queryBuilder.setTables(name);

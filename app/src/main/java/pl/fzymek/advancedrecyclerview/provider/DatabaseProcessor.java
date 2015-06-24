@@ -33,14 +33,10 @@ public abstract class DatabaseProcessor extends Processor {
 		return db.delete(name, selection, selectionArgs);
 	}
 
-	protected void purge(SQLiteDatabase db) {
+	protected int purge(SQLiteDatabase db) {
 		long now = Calendar.getInstance().getTimeInMillis();
 		int delete = db.delete(name, Contract.VALIDITY + "<= ?", new String[] {Long.toString(now)});
-//		String sql = "DELETE FROM " + name + " WHERE " + Contract.VALIDITY + " <= " + now;
-//		Log.d("DatabaseProcessor", "running purge sql: " + sql);
-//		db.execSQL(sql);
-//		int delete = db.delete(name, Contract.VALIDITY + "<= " + now, null);
-		Log.d("DatabaseProcessor", "purged: " + delete + " items from " + name);
+		return delete;
 	}
 
 }

@@ -30,6 +30,7 @@ import pl.fzymek.advancedrecyclerview.activity.BaseActivity;
 import pl.fzymek.advancedrecyclerview.adapter.ImagesAdapter;
 import pl.fzymek.advancedrecyclerview.config.Config;
 import pl.fzymek.advancedrecyclerview.controller.MainController;
+import pl.fzymek.advancedrecyclerview.controller.RxMainController;
 import pl.fzymek.advancedrecyclerview.model.Image;
 import pl.fzymek.advancedrecyclerview.sync.SyncUtils;
 import pl.fzymek.advancedrecyclerview.ui.MainUI;
@@ -182,7 +183,7 @@ public class MainFragment extends Fragment implements MainUI, SwipeRefreshLayout
 	}
 
 	private void setupController(Bundle savedState) {
-		controller = new MainController(getActivity());
+		controller = new RxMainController(getActivity());
 		controller.initialize(this);
 		controller.restoreState(savedState);
 		controller.setCache(cacheFragment);
