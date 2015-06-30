@@ -51,7 +51,7 @@ public class SyncMainController extends MainController implements LoaderManager.
 		Log.d(TAG, "starting loader for images");
 		images = null;
 		SyncUtils.sync();
-		getActivity().getLoaderManager().restartLoader(IMAGE_CURSOR_ID, null, this).forceLoad();
+//		getActivity().getLoaderManager().restartLoader(IMAGE_CURSOR_ID, null, this).forceLoad();
 	}
 
 	@Override
