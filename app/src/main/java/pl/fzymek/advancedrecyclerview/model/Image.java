@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import pl.fzymek.advancedrecyclerview.provider.Contract;
@@ -30,6 +31,10 @@ public class Image implements DbModel {
 	@SerializedName("display_sizes")
 	List<DisplaySize> displaySizes;
 	int validity;
+
+	public Image() {
+		displaySizes = new ArrayList<>();
+	}
 
 	public int get_id() {
 		return _id;

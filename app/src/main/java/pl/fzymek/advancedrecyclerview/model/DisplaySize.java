@@ -12,7 +12,7 @@ import pl.fzymek.advancedrecyclerview.provider.Contract;
  */
 public class DisplaySize implements DbModel{
 	int _id;
-	int imageId;
+	String imageId;
 	@SerializedName("name")
 	String name;
 	@SerializedName("uri")
@@ -23,7 +23,7 @@ public class DisplaySize implements DbModel{
 		return _id;
 	}
 
-	public int getImageId() {
+	public String getImageId() {
 		return imageId;
 	}
 
@@ -81,6 +81,7 @@ public class DisplaySize implements DbModel{
 
 		DisplaySize size = new DisplaySize();
 		size._id = displaySizesCursor.getInt(displaySizesCursor.getColumnIndex(Contract.DisplaySizes._ID));
+		size.imageId = displaySizesCursor.getString(displaySizesCursor.getColumnIndex(Contract.DisplaySizes.IMAGE_ID));
 		size.name = displaySizesCursor.getString(displaySizesCursor.getColumnIndex(Contract.DisplaySizes.NAME));
 		size.uri = displaySizesCursor.getString(displaySizesCursor.getColumnIndex(Contract.DisplaySizes.URI));
 		size.validity = displaySizesCursor.getInt(displaySizesCursor.getColumnIndex(Contract.DisplaySizes.VALIDITY));

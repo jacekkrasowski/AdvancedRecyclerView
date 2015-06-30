@@ -28,6 +28,7 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import pl.fzymek.advancedrecyclerview.R;
 import pl.fzymek.advancedrecyclerview.fragment.MainFragment;
+import pl.fzymek.advancedrecyclerview.model.DisplaySize;
 import pl.fzymek.advancedrecyclerview.model.Image;
 import pl.fzymek.advancedrecyclerview.utils.Utils;
 import pl.fzymek.advancedrecyclerview.widget.BlurringTextView;
@@ -68,7 +69,12 @@ public class ImagesAdapter extends RecyclerView.Adapter<ImagesAdapter.ImageCard>
 		holder.artist.setText(getItem(position).getArtist());
 		holder.title.setText(getItem(position).getTitle());
 		ImageLoader.getInstance().cancelDisplayTask(holder.image);
-		ImageLoader.getInstance().displayImage(getItem(position).getDisplayByType(Image.DisplaySizeType.PREVIEW).getUri(), holder.image, options);
+		DisplaySize displayByType = getItem(position).getDisplayByType(Image.DisplaySizeType.PREVIEW);
+		String uri = null;
+		if (displayByType != null) {
+			uri = displayByType.getUri();
+		}
+		ImageLoader.getInstance().displayImage(uri, holder.image, options);
 
 		if (position > lastPosition && !animatedPositions.get(position)) {
 			lastPosition = position;

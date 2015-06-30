@@ -22,7 +22,6 @@ import rx.schedulers.Schedulers;
  */
 public class RxMainController extends MainController implements Observer<Result> {
 
-	protected MainUI ui;
 	protected RestAdapter restAdapter;
 	FiveHundredPxAPI fiveHundredApi;
 

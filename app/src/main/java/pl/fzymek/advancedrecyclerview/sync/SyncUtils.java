@@ -32,7 +32,7 @@ public class SyncUtils {
 //			ContentResolver.setSyncAutomatically(syncAccount, Contract.AUTHORITY, true);
 			Bundle extras = new Bundle();
 			extras.putBoolean(Config.EXTRA_IS_AUTOMATIC_SYNC, true);
-			ContentResolver.addPeriodicSync(syncAccount, Contract.AUTHORITY, extras, TimeUnit.SECONDS.toSeconds(60));
+			ContentResolver.addPeriodicSync(syncAccount, Contract.AUTHORITY, extras, TimeUnit.SECONDS.toSeconds(5));
 			isNewAccount = true;
 		}
 

@@ -28,7 +28,7 @@ public final class Contract {
 
 		/**
 		 * image id
-		 * Type: INTEGER
+		 * Type: TEXT
 		 */
 		String IMAGE_ID = "image_id";
 
